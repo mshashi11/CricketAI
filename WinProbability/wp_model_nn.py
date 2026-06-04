@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 "Win Probability Models for T10 format (1st and 2nd Inning)"
 
+import os
+import urllib.request
 import torch
 import pandas as pd
 from torch import nn
@@ -139,14 +141,38 @@ def generate_inn2_wp_table(
         
     return torch.column_stack((torch.tensor(rows).to(device), wp_model_output))
 
+def ensure_data_exists() -> str:
+    """Checks for local CSV data; downloads from remote host if missing.
+    Returns the path to the directory containing the data files."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    remote_files = {
+        "t10_inn1_data.csv": "https://github.com/mshashi11/CricketAI/releases/download/v1.0.0/t10_inn1_data.csv",
+        "t10_inn2_data.csv": "https://github.com/mshashi11/CricketAI/releases/download/v1.0.0/t10_inn2_data.csv"
+    }
+
+    for filename, url in remote_files.items():
+        file_path = os.path.join(script_dir, filename)
+        if not os.path.exists(file_path):
+            print(f"'{filename}' not found at {file_path}. Downloading from GitHub Releases...")
+            try:
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                urllib.request.urlretrieve(url, file_path)
+                print(f"Successfully downloaded '{filename}'.")
+            except Exception as e:
+                raise IOError(f"Failed to download {filename} from {url}. Error: {e}")
+    return script_dir
+
 def main():
     """Main function, the execution starts here"""
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
+    # Ensure dataset is downloaded and get directory path
+    data_dir = ensure_data_exists()
+
     # --- 1st Inning Data ---
     print("Loading 1st Inning Data...")
-    training_data_inn1 = pd.read_csv("t10_inn1_data.csv")
+    training_data_inn1 = pd.read_csv(os.path.join(data_dir, "t10_inn1_data.csv"))
     data_x_inn1 = torch.from_numpy(training_data_inn1[['cum_balls', 'cum_wickets', 'cum_runs']].values).float().to(device)
     data_y_inn1 = torch.from_numpy(training_data_inn1[['won']].values).float().to(device)
     data_score_inn1 = torch.from_numpy(training_data_inn1[['total_score']].values).float().to(device)
@@ -163,7 +189,7 @@ def main():
 
     # --- 2nd Inning Data ---
     print("Loading 2nd Inning Data...")
-    training_data_inn2 = pd.read_csv("t10_inn2_data.csv")
+    training_data_inn2 = pd.read_csv(os.path.join(data_dir, "t10_inn2_data.csv"))
     data_x_inn2 = torch.from_numpy(training_data_inn2[['rem_balls', 'wickets_hand', 'runs_chase']].values).float().to(device)
     data_y_inn2 = torch.from_numpy(training_data_inn2[['won']].values).float().to(device)
 

@@ -1,13 +1,39 @@
 #!/usr/bin/python3
 "XGBoost Win Probability and Score Projection (with Volatility-based Bounds) for T10 format"
 
+import os
+import urllib.request
 import pandas as pd
 import numpy as np
 import xgboost as xgb
 
+def ensure_data_exists() -> str:
+    """Checks for local CSV data; downloads from remote host if missing.
+    Returns the path to the directory containing the data files."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    remote_files = {
+        "t10_inn1_data.csv": "https://github.com/mshashi11/CricketAI/releases/download/v1.0.0/t10_inn1_data.csv",
+        "t10_inn2_data.csv": "https://github.com/mshashi11/CricketAI/releases/download/v1.0.0/t10_inn2_data.csv"
+    }
+
+    for filename, url in remote_files.items():
+        file_path = os.path.join(script_dir, filename)
+        if not os.path.exists(file_path):
+            print(f"'{filename}' not found at {file_path}. Downloading from GitHub Releases...")
+            try:
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                urllib.request.urlretrieve(url, file_path)
+                print(f"Successfully downloaded '{filename}'.")
+            except Exception as e:
+                raise IOError(f"Failed to download {filename} from {url}. Error: {e}")
+    return script_dir
+
 def train_xgb_models():
+    # Ensure dataset is downloaded and get directory path
+    data_dir = ensure_data_exists()
+
     print("Loading and training 1st Inning models...")
-    df1 = pd.read_csv("t10_inn1_data.csv")
+    df1 = pd.read_csv(os.path.join(data_dir, "t10_inn1_data.csv"))
     
     X1 = df1[['cum_balls', 'cum_wickets', 'cum_runs']]
     y_wp1 = df1['won']
@@ -43,7 +69,7 @@ def train_xgb_models():
     score_model_vol.fit(X1, abs_error)
     
     print("Loading and training 2nd Inning models...")
-    df2 = pd.read_csv("t10_inn2_data.csv")
+    df2 = pd.read_csv(os.path.join(data_dir, "t10_inn2_data.csv"))
     X2 = df2[['rem_balls', 'wickets_hand', 'runs_chase']]
     y_wp2 = df2['won']
     
