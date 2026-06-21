@@ -1,10 +1,10 @@
-# CricketAI: T10 Win Probability Models
+# CricketAI: Building AI models with Cricket data
 
-This repository contains statistical and Machine Learning models to compute **Win Probability (WP)** and **Projected Inning Scores** for the **T10 format** of Cricket.
+This repository contains statistical and Machine Learning models using ball by ball data from Cricket matches.
 
-The project contains two main parts:
-1. **Data Prep** (`DataPrep/`): Script to extract ball-by-ball data from a match database and generate structured training datasets.
-2. **Win Probability Modeling** (`WinProbability/`): Deep Learning (PyTorch) and Gradient Boosting (XGBoost) models to train and generate win probability state tables.
+The project contains the following parts:
+
+1. **Win Probability Modeling** (`WinProbability/`): Deep Learning (PyTorch) and Gradient Boosting (XGBoost) models to train and generate win probability state tables.
 
 ---
 
@@ -60,6 +60,3 @@ If you regenerate or update the datasets using the `DataPrep` tools, follow thes
 - `WinProbability/`:
   - [wp_model_nn.py](file:///home/shanuja/CricketAI/WinProbability/wp_model_nn.py): PyTorch NN implementation. Trains models for the 1st inning, 2nd inning, and 1st inning score projections, enforcing innings-break boundary consistency.
   - [wp_model_xgb.py](file:///home/shanuja/CricketAI/WinProbability/wp_model_xgb.py): XGBoost implementation with volatility-based bounds.
-- `DataPrep/`:
-  - [generate_t10_data.py](file:///home/shanuja/CricketAI/DataPrep/generate_t10_data.py): Script that connects to the Cricmetric database and processes ball-by-ball inputs into modeling rows.
-  - [db_connections.py](file:///home/shanuja/CricketAI/DataPrep/db_connections.py): Handles local DB connections (database credentials/connections are ignored from Git).
